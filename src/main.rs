@@ -8,7 +8,7 @@ async fn main() {
     dotenvy::dotenv().ok();
 
     let args = parse_cli();
-    let keyword = &args.keyword;
+    let keyword = &args.keyword.to_ascii_lowercase();
     let begin_date = &args.begin_date;
     let end_date = &args.end_date;
 
