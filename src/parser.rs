@@ -1,15 +1,15 @@
 use aletheia::{GuardianContentClient, enums::*, structs::SearchResult};
-use chrono::NaiveDate;
-use std::env;
+use chrono::{Datelike, NaiveDate};
 use std::collections::HashMap;
+use std::env;
 
 pub async fn get_content(
     keyword: &str,
-    date_from: (i32, u32, u32),
-    date_to: (i32, u32, u32),
-    ) -> Result<Vec<SearchResult>, Box<dyn std::error::Error>> {
-    let guardian_api_key = env::var("GUARDIAN_API_KEY")
-        .expect("GUARDIAN_API_KEY must be set in .env");
+    date_from: &NaiveDate,
+    date_to: &NaiveDate,
+) -> Result<Vec<SearchResult>, Box<dyn std::error::Error>> {
+    let guardian_api_key =
+        env::var("GUARDIAN_API_KEY").expect("GUARDIAN_API_KEY must be set in .env");
 
     let client = GuardianContentClient::new(&guardian_api_key);
 
@@ -19,8 +19,8 @@ pub async fn get_content(
 async fn fetch_all_pages(
     client: &GuardianContentClient,
     keyword: &str,
-    date_from: (i32, u32, u32),
-    date_to: (i32, u32, u32),
+    date_from: &NaiveDate,
+    date_to: &NaiveDate,
 ) -> Result<Vec<SearchResult>, Box<dyn std::error::Error>> {
     let mut all_results = Vec::new();
     let mut current_page: u32 = 1;
@@ -42,15 +42,15 @@ async fn fetch_all_pages(
 async fn fetch_page(
     client: &GuardianContentClient,
     keyword: &str,
-    date_from: (i32, u32, u32),
-    date_to: (i32, u32, u32),
+    date_from: &NaiveDate,
+    date_to: &NaiveDate,
     page: u32,
 ) -> Result<Vec<SearchResult>, Box<dyn std::error::Error>> {
     let response = client
         .build_request()
         .search(keyword)
-        .date_from(date_from.0, date_from.1, date_from.2)
-        .date_to(date_to.0, date_to.1, date_to.2)
+        .date_from(date_from.year(), date_from.month(), date_from.day())
+        .date_to(date_to.year(), date_to.month(), date_to.day())
         .page_size(200)
         .page(page)
         .show_fields(vec![Field::Byline, Field::LastModified])
@@ -67,7 +67,7 @@ pub fn aggregate_by_day(results: &[SearchResult]) -> Vec<(NaiveDate, usize)> {
 
     for result in results {
         if let Some(pub_date) = result.web_publication_date {
-            let day = pub_date.date_naive(); // drop the time, keep just the date
+            let day = pub_date.date_naive();
             *counts.entry(day).or_insert(0) += 1;
         }
     }
@@ -76,4 +76,3 @@ pub fn aggregate_by_day(results: &[SearchResult]) -> Vec<(NaiveDate, usize)> {
     sorted.sort_by_key(|(date, _)| *date);
     sorted
 }
-
