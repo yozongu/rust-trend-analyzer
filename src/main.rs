@@ -1,7 +1,8 @@
 mod parser;
 use parser::*;
-use semester_project::graph_builder::export_daily_counts_to_csv;
 use semester_project::cli::{parse_cli};
+use semester_project::graph_builder::plot_data_from_csv;
+
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
@@ -32,6 +33,7 @@ async fn main() {
             return;
         }
     };
+    plot_data_from_csv(&csv_filename, &keyword).unwrap();
     // println!("{:#?}", parse_cli());
     
 }

@@ -1,7 +1,8 @@
 use aletheia::{GuardianContentClient, enums::*, structs::SearchResult};
-use chrono::{Datelike, NaiveDate};
+use chrono::{Datelike, Local, NaiveDate};
 use std::collections::HashMap;
 use std::env;
+use std::error::Error;
 
 pub async fn get_content(
     keyword: &str,
@@ -75,4 +76,23 @@ pub fn aggregate_by_day(results: &[SearchResult]) -> Vec<(NaiveDate, usize)> {
     let mut sorted: Vec<(NaiveDate, usize)> = counts.into_iter().collect();
     sorted.sort_by_key(|(date, _)| *date);
     sorted
+}
+
+pub fn export_daily_counts_to_csv(data: &[(NaiveDate, usize)]) -> Result<String, Box<dyn Error>> {
+    let filename = generate_filename("trend", "csv");
+
+    let mut writer = csv::Writer::from_path(&filename)?;
+    writer.write_record(["date", "count"])?;
+
+    for (date, count) in data {
+        writer.write_record([date.to_string(), count.to_string()])?;
+    }
+
+    writer.flush()?;
+    Ok(filename)
+}
+
+pub fn generate_filename(prefix: &str, extension: &str) -> String {
+    let now = Local::now();
+    format!("{}_{}.{}", prefix, now.format("%Y%m%d_%H%M%S"), extension)
 }
