@@ -33,6 +33,7 @@ async fn main() {
             return;
         }
     };
+    
     plot_data_from_csv(&csv_filename, &keyword).unwrap();
     // println!("{:#?}", parse_cli());
     

@@ -2,6 +2,7 @@ import csv
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import encodings
 
 def plot_data_from_csv(filename, keyword):
     dates = []
